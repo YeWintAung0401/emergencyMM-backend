@@ -28,28 +28,30 @@ public class UserRepository {
         HashMap<String, Object> result = new HashMap<>();
         List<Object> params = new ArrayList<>();
 
-        StringBuilder sql = new StringBuilder(
-                "SELECT userId, username, email, phone, age, createdAt, isActive " +
-                        "FROM Users WHERE 1=1 "
-        );
+        // ── Build WHERE conditions once ───────────────────────────────────
+        StringBuilder where = new StringBuilder("WHERE 1=1 ");
 
         if (data.get("searchtxt") != null && !data.get("searchtxt").toString().isEmpty()) {
-            sql.append("AND username LIKE ? ");
+            where.append("AND username LIKE ? ");
             params.add("%" + data.get("searchtxt") + "%");
         }
 
         if (data.get("isActive") != null && !data.get("isActive").toString().isEmpty()) {
-            sql.append("AND isActive = ? ");
+            where.append("AND isActive = ? ");
             params.add(data.get("isActive"));
         }
 
         if (data.get("age") != null && !data.get("age").toString().isEmpty()) {
-            sql.append("AND age = ? ");
+            where.append("AND age = ? ");
             params.add(data.get("age"));
         }
 
+        // ── Main query — reuse same WHERE ─────────────────────────────────
+        String sql = "SELECT userId, username, email, phone, age, createdAt, isActive " +
+                "FROM Users " + where;
+
         List<HashMap<String, Object>> list = jdbcTemplate.query(
-                sql.toString(),
+                sql,
                 params.toArray(),
                 (rs, rowNum) -> {
                     HashMap<String, Object> row = new HashMap<>();
@@ -64,14 +66,13 @@ public class UserRepository {
                 }
         );
 
-        // Count query
-        StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM Users WHERE 1=1 ");
-        List<Object> countParams = new ArrayList<>(params);
+        // ── Count query — reuse same WHERE and same params ─────────────────
+        String countSql = "SELECT COUNT(*) FROM Users " + where;
 
         Integer count = jdbcTemplate.queryForObject(
-                countSql.toString(),
+                countSql,
                 Integer.class,
-                countParams.toArray()
+                params.toArray()  // ← same params, no duplication
         );
 
         result.put("userList", list);

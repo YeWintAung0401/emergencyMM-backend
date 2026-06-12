@@ -28,7 +28,6 @@ public class UserRepository {
         HashMap<String, Object> result = new HashMap<>();
         List<Object> params = new ArrayList<>();
 
-        // ── Build WHERE conditions once ───────────────────────────────────
         StringBuilder where = new StringBuilder("WHERE 1=1 ");
 
         if (data.get("searchtxt") != null && !data.get("searchtxt").toString().isEmpty()) {
@@ -46,7 +45,6 @@ public class UserRepository {
             params.add(data.get("age"));
         }
 
-        // ── Main query — reuse same WHERE ─────────────────────────────────
         String sql = "SELECT userId, username, email, phone, age, createdAt, isActive " +
                 "FROM Users " + where;
 
@@ -66,16 +64,10 @@ public class UserRepository {
                 }
         );
 
-        // ── Count query — reuse same WHERE and same params ─────────────────
         String countSql = "SELECT COUNT(*) FROM Users " + where;
+        Integer count = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
 
-        Integer count = jdbcTemplate.queryForObject(
-                countSql,
-                Integer.class,
-                params.toArray()  // ← same params, no duplication
-        );
-
-        result.put("userList", list);
+        result.put("userList",  list);
         result.put("userCount", count != null ? count : 0);
         return result;
     }

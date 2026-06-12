@@ -59,7 +59,9 @@ public class UserRepository {
                     row.put("phone",     rs.getString("phone"));
                     row.put("age",       rs.getInt("age"));
                     row.put("createdAt", rs.getString("createdAt"));
-                    row.put("isActive",  rs.getObject("isActive"));
+                    row.put("isActive",  rs.getObject("isActive"));// My SQL
+//                    SQL Server
+//                    row.put("isActive",  rs.getInt("isActive"));
                     return row;
                 }
         );
@@ -69,6 +71,112 @@ public class UserRepository {
 
         result.put("userList",  list);
         result.put("userCount", count != null ? count : 0);
+        return result;
+    }
+
+
+
+    // ── GET RECOMMENDATIONS ──────────────────────────────────────────────
+    public HashMap<String, Object> getRecommendations(HashMap<String, Object> data) {
+        HashMap<String, Object> result = new HashMap<>();
+        List<Object> params = new ArrayList<>();
+
+        // ── Main query ────────────────────────────────────────────────────
+        String sql = "SELECT recommendation_id, recommender_name, position_title, " +
+                "company_name, recommendation_text, rating " +
+                "FROM recommendations ";
+
+        List<HashMap<String, Object>> list = jdbcTemplate.query(
+                sql,
+                params.toArray(),
+                (rs, rowNum) -> {
+                    HashMap<String, Object> row = new HashMap<>();
+                    row.put("recommendationId",   rs.getInt("recommendation_id"));
+                    row.put("recommenderName",    rs.getString("recommender_name"));
+                    row.put("positionTitle",      rs.getString("position_title"));
+                    row.put("companyName",        rs.getString("company_name"));
+                    row.put("recommendationText", rs.getString("recommendation_text"));
+                    row.put("rating",             rs.getInt("rating"));
+                    return row;
+                }
+        );
+
+        // ── Count query — same table and filters ──────────────────────────
+        String countSql = "SELECT COUNT(*) FROM recommendations ";
+        Integer count = jdbcTemplate.queryForObject(countSql, Integer.class, params.toArray());
+
+        result.put("recommendationList",  list);
+        result.put("recommendationCount", count != null ? count : 0);
+        return result;
+    }
+
+    // ── INSERT RECOMMENDATION ────────────────────────────────────────────
+    public HashMap<String, Object> insertRecommendation(HashMap<String, Object> data) {
+        HashMap<String, Object> result = new HashMap<>();
+
+        String sql = "INSERT INTO recommendations (recommender_name, position_title, company_name, recommendation_text, rating) " +
+                "VALUES (?, ?, ?, ?, ?)";
+
+        int rows = jdbcTemplate.update(sql,
+                data.get("recommenderName"),
+                data.get("positionTitle"),
+                data.get("companyName"),
+                data.get("recommendationText"),
+                data.get("rating")
+        );
+
+        if (rows > 0) {
+            result.put("status",  "success");
+            result.put("message", "Recommendation inserted successfully");
+        } else {
+            result.put("status",  "error");
+            result.put("message", "Insert failed");
+        }
+        return result;
+    }
+
+    // ── UPDATE RECOMMENDATION ────────────────────────────────────────────
+    public HashMap<String, Object> updateRecommendation(HashMap<String, Object> data) {
+        HashMap<String, Object> result = new HashMap<>();
+
+        String sql = "UPDATE recommendations SET recommender_name = ?, position_title = ?, " +
+                "company_name = ?, recommendation_text = ?, rating = ? " +
+                "WHERE recommendation_id = ?";
+
+        int rows = jdbcTemplate.update(sql,
+                data.get("recommenderName"),
+                data.get("positionTitle"),
+                data.get("companyName"),
+                data.get("recommendationText"),
+                data.get("rating"),
+                data.get("recommendationId")
+        );
+
+        if (rows > 0) {
+            result.put("status",  "success");
+            result.put("message", "Recommendation updated successfully");
+        } else {
+            result.put("status",  "error");
+            result.put("message", "Update failed or ID not found");
+        }
+        return result;
+    }
+
+    // ── DELETE RECOMMENDATION ────────────────────────────────────────────
+    public HashMap<String, Object> deleteRecommendation(int id) {
+        HashMap<String, Object> result = new HashMap<>();
+
+        String sql = "DELETE FROM recommendations WHERE recommendation_id = ?";
+
+        int rows = jdbcTemplate.update(sql, id);
+
+        if (rows > 0) {
+            result.put("status",  "success");
+            result.put("message", "Recommendation deleted successfully");
+        } else {
+            result.put("status",  "error");
+            result.put("message", "Delete failed or ID not found");
+        }
         return result;
     }
 

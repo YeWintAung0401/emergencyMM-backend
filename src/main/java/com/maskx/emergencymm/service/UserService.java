@@ -25,4 +25,21 @@ public class UserService {
         }
         return set;
     }
+
+    // ── RECOMMENDATIONS ───────────────────────────────────────────────────
+    public HashMap<String, Object> getRecommendations(HashMap<String, Object> data) throws Exception {
+        return userRepository.getRecommendations(data);
+    }
+
+    public HashMap<String, Object> insertRecommendation(HashMap<String, Object> data) throws Exception {
+        return userRepository.insertRecommendation(data);
+    }
+
+    public HashMap<String, Object> updateRecommendation(HashMap<String, Object> data) throws Exception {
+        return userRepository.updateRecommendation(data);
+    }
+
+    public HashMap<String, Object> deleteRecommendation(int id) throws Exception {
+        return userRepository.deleteRecommendation(id);
+    }
 }
